@@ -20,7 +20,7 @@
 ## 🏗️ PHASE 1: MVP (Week 1)
 
 ### 1.1 Project Setup & Configuration
-- [ ] **Task 1.1.1**: Install additional dependencies
+- [✅ ] **Task 1.1.1**: Install additional dependencies
   - [ ] `axios` for API calls
   - [ ] `@google/generative-ai` for Gemini
   - [ ] `lucide-react` for icons
@@ -28,7 +28,7 @@
   - **Estimate**: 30 minutes
   - **Status**: ⚪ Not Started
 
-- [ ] **Task 1.1.2**: Set up environment variables
+- [✅ ] **Task 1.1.2**: Set up environment variables
   - [ ] Create `.env.local` file
   - [ ] Add Reddit API credentials
   - [ ] Add Gemini API key
@@ -36,7 +36,7 @@
   - **Estimate**: 15 minutes
   - **Status**: ⚪ Not Started
 
-- [ ] **Task 1.1.3**: Configure project structure
+- [ ✅] **Task 1.1.3**: Configure project structure
   - [ ] Create `/src/components` directory
   - [ ] Create `/src/lib` directory
   - [ ] Create `/src/app/api` directory

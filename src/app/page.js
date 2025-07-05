@@ -8,7 +8,7 @@ export default function Home() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchPostsAndSummaries() {
+    async function fetchPosts() {
       try {
         const res = await fetch("/api/reddit?subreddit=startups&limit=5", {
           cache: "no-store",
@@ -16,39 +16,16 @@ export default function Home() {
         if (!res.ok) throw new Error("Failed to fetch Reddit posts");
 
         const data = await res.json();
-        const postsWithSummary = await Promise.all(
-          data.posts.map(async (post) => {
-            try {
-              const summaryRes = await fetch("/api/gemini/summary", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  title: post.title,
-                  selftext: post.selftext,
-                }),
-              });
-
-              if (!summaryRes.ok) throw new Error("Gemini summary failed");
-              const { summary } = await summaryRes.json();
-
-              return { ...post, summary };
-            } catch (err) {
-              console.error("Error fetching Gemini summary:", err.message);
-              return { ...post, summary: "Could not generate summary." };
-            }
-          })
-        );
-
-        setPosts(postsWithSummary);
+        setPosts(data.posts);
       } catch (err) {
         console.error(err);
-        setError("Failed to load posts or summaries.");
+        setError("Failed to load posts.");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchPostsAndSummaries();
+    fetchPosts();
   }, []);
 
   if (loading) {
@@ -72,6 +49,9 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center min-h-screen py-10 bg-gray-900">
       <h1 className="text-3xl font-bold mb-8 text-white">Reddit Startup Idea Generator</h1>
+      <p className="text-gray-400 mb-8 text-center max-w-2xl">
+        Discover startup opportunities from Reddit discussions using AI-free intelligent summarization
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
         {posts.map((post) => (
           <StartupCard key={post.id} post={post} />

@@ -38,6 +38,45 @@ Description: ...
   }
 }
 
+export async function getGeminiSolution({ title, selftext }) {
+  const prompt = `
+Given the following Reddit post about a startup idea, generate a step-by-step solution outline for how someone could build and launch this startup. Be practical, concise, and actionable.
+
+Format:
+Solution Outline:
+1.
+2.
+3.
+...
+
+Reddit Post Title: ${title}
+Reddit Post Text: ${selftext}
+`;
+
+  const content = prompt;
+
+  const body = {
+    contents: [
+      {
+        parts: [{ text: content }]
+      }
+    ]
+  };
+
+  try {
+    const response = await axios.post(
+      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
+      body,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return { solution: text };
+  } catch (error) {
+    console.error("Gemini API error:", error.response?.data || error.message);
+    throw new Error("Gemini API call failed");
+  }
+}
+
 function parseGeminiSummary(text) {
   const titleMatch = text.match(/Title:(.*)/i);
   const descMatch = text.match(/Description:(.*)/i);

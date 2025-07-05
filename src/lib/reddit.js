@@ -91,6 +91,34 @@ export async function fetchRedditPosts(subreddit, limit = 5) {
 
 /**
  * Fetches public posts from a subreddit using Reddit's public JSON endpoint.
+ * Supports 'hot' and 'new' modes, and pagination for 'new'.
+ * @param {string} subreddit - The subreddit to fetch from (e.g., "startups")
+ * @param {number} limit - Number of posts to fetch (default: 5)
+ * @param {string} mode - 'hot' or 'new' (default: 'hot')
+ * @param {string} after - Reddit fullname of the last post from previous page (for pagination)
+ * @returns {Promise<{posts: Array, after: string}>} - Array of post objects and the next 'after' token
+ */
+export async function fetchRedditPostsPublicMode(subreddit, limit = 5, mode = 'hot', after = null) {
+  try {
+    let url = `https://www.reddit.com/r/${subreddit}/${mode}.json?limit=${limit}`;
+    if (after) url += `&after=${after}`;
+    const response = await axios.get(url, {
+      headers: { "User-Agent": "RedditStartupIdeaGenerator/0.1" }
+    });
+    // Filter for text posts only (no images/videos)
+    const posts = response.data.data.children
+      .map(child => child.data)
+      .filter(post => post.selftext && !post.is_video);
+    const nextAfter = response.data.data.after;
+    return { posts, after: nextAfter };
+  } catch (error) {
+    console.error(`Failed to fetch public Reddit posts (${mode}):`, error.response?.data || error.message);
+    throw new Error(`Fetching public Reddit posts (${mode}) failed`);
+  }
+}
+
+/**
+ * Fetches public posts from a subreddit using Reddit's public JSON endpoint.
  * No authentication required.
  * @param {string} subreddit - The subreddit to fetch from (e.g., "startups")
  * @param {number} limit - Number of posts to fetch (default: 5)

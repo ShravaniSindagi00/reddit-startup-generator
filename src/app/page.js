@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import StartupCard from "../components/StartupCard";
+import CardSkeleton from "../components/CardSkeleton";
+import { Lightbulb } from "lucide-react";
 
 const SUBREDDIT = "startups";
 const PAGE_SIZE = 6;
@@ -128,55 +130,48 @@ export default function Home() {
   };
 
   return (
-    <main className="flex flex-col items-center min-h-screen py-10 bg-gray-900">
-      <h1 className="text-3xl font-bold mb-8 text-white">Reddit Startup Idea Generator</h1>
-      <div className="flex gap-4 mb-8">
-        <button
-          className={`px-4 py-2 rounded font-medium transition-colors ${tab === "hot" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-200 hover:bg-gray-600"}`}
-          onClick={() => handleTab("hot")}
-        >
-          Hot Topics
-        </button>
-        <button
-          className={`px-4 py-2 rounded font-medium transition-colors ${tab === "new" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-200 hover:bg-gray-600"}`}
-          onClick={() => handleTab("new")}
-        >
-          New Topics
-        </button>
+    <main className="min-h-screen w-full flex flex-col items-center justify-start bg-blue-50 py-12">
+      <div className="w-full flex justify-center mb-8">
+        <div className="flex gap-4">
+          <button
+            className={`px-4 py-2 rounded font-medium transition-colors ${tab === "hot" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+            onClick={() => handleTab("hot")}
+          >
+            Hot Topics
+          </button>
+          <button
+            className={`px-4 py-2 rounded font-medium transition-colors ${tab === "new" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+            onClick={() => handleTab("new")}
+          >
+            New Topics
+          </button>
+        </div>
       </div>
-      {tab === "hot" && showHotMessage && (
-        <div className="mb-4 text-yellow-400 bg-yellow-900/40 px-4 py-2 rounded">
-          These are the current hot topics. Check back later for updates!
-        </div>
-      )}
-      {error && (
-        <div className="mb-4 text-red-400 bg-red-900/40 px-4 py-2 rounded">
-          {error}
-        </div>
-      )}
       {loading ? (
-        <p className="text-gray-400">Loading {tab === "hot" ? "hot" : "new"} topics...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-5xl items-start">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
       ) : noResults ? (
         <div className="text-gray-400 mt-8">No startup ideas found with confidence &gt; {CONFIDENCE_THRESHOLD}.</div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
-            {posts.map((post) => (
-              <StartupCard key={post.id} post={post} />
-            ))}
-          </div>
-          {tab === "new" && after && (
-            <div className="flex justify-center mt-8">
-              <button
-                className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors font-medium disabled:opacity-60"
-                onClick={handleReadMore}
-                disabled={readMoreLoading}
-              >
-                {readMoreLoading ? "Loading..." : "Read More"}
-              </button>
-            </div>
-          )}
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-5xl items-start">
+          {posts.map((post) => (
+            <StartupCard key={post.id} post={post} />
+          ))}
+        </div>
+      )}
+      {tab === "new" && after && !loading && !noResults && (
+        <div className="flex justify-center mt-8">
+          <button
+            className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors font-medium disabled:opacity-60"
+            onClick={handleReadMore}
+            disabled={readMoreLoading}
+          >
+            {readMoreLoading ? "Loading..." : "Read More"}
+          </button>
+        </div>
       )}
     </main>
   );

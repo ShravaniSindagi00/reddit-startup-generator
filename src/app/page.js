@@ -3,6 +3,9 @@ import React, { useEffect, useState, useRef } from "react";
 import StartupCard from "../components/StartupCard";
 import CardSkeleton from "../components/CardSkeleton";
 import { Lightbulb } from "lucide-react";
+import ErrorState from "../components/EmptyState";
+import EmptyState from "../components/EmptyState";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SUBREDDIT = "startups";
 const PAGE_SIZE = 6;
@@ -153,24 +156,37 @@ export default function Home() {
             <CardSkeleton key={i} />
           ))}
         </div>
+      ) : error ? (
+        <ErrorState message={error} />
       ) : noResults ? (
-        <div className="text-gray-400 mt-8">No startup ideas found with confidence &gt; {CONFIDENCE_THRESHOLD}.</div>
+        <EmptyState message={`No startup ideas found with confidence > ${CONFIDENCE_THRESHOLD}.`} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-5xl items-start">
-          {posts.map((post) => (
-            <StartupCard key={post.id} post={post} />
-          ))}
+          <AnimatePresence>
+            {posts.map((post) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 24 }}
+                transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
+              >
+                <StartupCard post={post} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
       {tab === "new" && after && !loading && !noResults && (
         <div className="flex justify-center mt-8">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors font-medium disabled:opacity-60"
             onClick={handleReadMore}
             disabled={readMoreLoading}
           >
             {readMoreLoading ? "Loading..." : "Read More"}
-          </button>
+          </motion.button>
         </div>
       )}
     </main>

@@ -1,30 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
-
-function generateSolution(summary) {
-  if (!summary) return "No solution available.";
-  const title = summary.title || "this startup idea";
-  const desc = summary.description || "";
-  const keywords = summary.keyWords && summary.keyWords.length > 0 ? summary.keyWords.join(", ") : null;
-  return (
-    <div>
-      <p className="mb-2"><span className="font-semibold">How to build: </span>{title}</p>
-      {desc && <p className="mb-2 text-sm text-gray-300">{desc}</p>}
-      <ol className="list-decimal list-inside text-sm space-y-1">
-        <li>Validate the idea by talking to potential users and researching the market{keywords ? ` (focus: ${keywords})` : ""}.</li>
-        <li>Build a minimum viable product (MVP) that solves the core problem.</li>
-        <li>Launch a simple landing page and collect signups or feedback.</li>
-        <li>Iterate based on user feedback and usage data.</li>
-        <li>Promote your solution in relevant communities and social media.</li>
-        <li>Plan for monetization and scaling if you see traction.</li>
-      </ol>
-    </div>
-  );
-}
+import { useState } from "react";
 
 export default function StartupCard({ post }) {
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [solution, setSolution] = useState(null);
   const [solutionLoading, setSolutionLoading] = useState(false);
@@ -33,41 +10,7 @@ export default function StartupCard({ post }) {
   // Construct the Reddit post URL
   const redditUrl = post.permalink ? `https://www.reddit.com${post.permalink}` : null;
 
-  useEffect(() => {
-    let ignore = false;
-    async function fetchSummary() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/summary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            title: post.title, 
-            selftext: post.selftext,
-            ups: post.ups,
-            num_comments: post.num_comments,
-            created_utc: post.created_utc
-          }),
-        });
-        const data = await res.json();
-        if (!ignore) setSummary(data);
-      } catch (err) {
-        if (!ignore) setSummary({ 
-          title: post.title, 
-          description: "Summary failed to load." 
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchSummary();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  // Fetch AI solution when modal opens
+  // Handler for Generate Startup Idea button
   const handleOpenModal = async () => {
     setShowModal(true);
     setSolution(null);
@@ -78,13 +21,13 @@ export default function StartupCard({ post }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: summary?.title || post.title,
+          title: post.title,
           selftext: post.selftext
         })
       });
       const data = await res.json();
       if (data.solution) {
-        setSolution(data.solution);
+        setSolution(data.solution.replace(/\*\*/g, ""));
       } else {
         setSolutionError("No solution generated.");
       }
@@ -96,54 +39,47 @@ export default function StartupCard({ post }) {
   };
 
   return (
-    <div className="bg-gray-800 rounded-xl shadow-md p-6 flex flex-col justify-between min-h-[220px] border border-gray-700 relative">
-      <div>
-        <h2 className="text-lg font-semibold mb-2 text-white line-clamp-2">
-          {summary?.title || post.title}
-        </h2>
-        <p className="text-gray-300 text-sm mb-4 line-clamp-4">
-          {summary?.description || (loading ? "Loading summary..." : "No summary available.")}
-        </p>
-        {summary?.keyWords && summary.keyWords.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {summary.keyWords.map((word, index) => (
-              <span key={index} className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                {word}
-              </span>
-            ))}
-          </div>
-        )}
+    <div className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 max-w-md w-full border border-gray-200">
+      {/* Top: Subreddit badge and upvotes */}
+      <div className="flex items-center gap-2 mb-1">
+        <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">r/{post.subreddit || "startups"}</span>
+        <span className="flex items-center text-gray-400 text-sm font-medium ml-2">
+          <svg width="16" height="16" fill="none" viewBox="0 0 16 16" className="inline-block mr-1"><path d="M8 3v10M8 3l3.5 3.5M8 3L4.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {post.ups || 0}
+        </span>
       </div>
-      <div className="flex justify-between items-center gap-2 mt-2">
-        <div className="text-xs text-gray-400">
-          {summary?.confidence && `Confidence: ${summary.confidence}%`}
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
-            onClick={handleOpenModal}
-            disabled={loading || !summary}
-            title="Generate a solution outline for this idea"
-          >
-            Generate Solution
-          </button>
-          {redditUrl && (
-            <a
-              href={redditUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded transition-colors"
-              title="View this post on Reddit"
-            >
-              View on Reddit
-            </a>
-          )}
-        </div>
+      {/* Title */}
+      <div className="text-lg font-bold text-gray-900 mb-1 leading-snug">
+        {post.title}
       </div>
+      {/* Username */}
+      <div className="text-sm text-gray-500 mb-2">
+        {post.author ? `u/${post.author}` : ""}
+      </div>
+      {/* Button */}
+      <button
+        className="w-full flex items-center justify-center gap-2 py-2 rounded bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white font-semibold text-base shadow transition-colors"
+        onClick={handleOpenModal}
+        title="Generate a startup idea solution"
+      >
+        <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M10 2v2M15.657 4.343l-1.414 1.414M18 10h-2M15.657 15.657l-1.414-1.414M10 18v-2M4.343 15.657l1.414-1.414M2 10h2M4.343 4.343l1.414 1.414" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="1.5"/></svg>
+        Generate Startup Idea
+      </button>
       {/* Modal Popup */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-gray-900 rounded-lg shadow-lg p-6 max-w-md w-full relative border border-gray-700 max-h-[70vh] overflow-y-auto">
+          <div className="bg-gray-900 rounded-lg shadow-lg p-6 max-w-md w-full relative border border-gray-700 max-h-[70vh] overflow-y-auto pt-10">
+            {redditUrl && (
+              <a
+                href={redditUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute left-4 top-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold px-3 py-1 rounded transition-colors z-10"
+                style={{ textDecoration: 'none' }}
+              >
+                View on Reddit
+              </a>
+            )}
             <button
               className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl font-bold"
               onClick={() => setShowModal(false)}
@@ -157,7 +93,7 @@ export default function StartupCard({ post }) {
             ) : solutionError ? (
               <div className="text-red-400">{solutionError}</div>
             ) : solution ? (
-              <pre className="whitespace-pre-wrap text-gray-200 text-sm">{solution.replace(/\*\*/g, "")}</pre>
+              <pre className="whitespace-pre-wrap text-gray-200 text-sm">{solution}</pre>
             ) : null}
           </div>
         </div>

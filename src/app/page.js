@@ -148,19 +148,36 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-start bg-blue-50 py-12">
       {/* 5. Subreddit selector */}
+      <div className="w-full flex flex-col items-center mb-10 mt-6">
+        <div className="flex items-center justify-center gap-4 mb-3">
+          <div className="bg-blue-600 rounded-full p-4 flex items-center justify-center">
+            <Lightbulb className="w-10 h-10 text-white" aria-hidden="true" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-2 tracking-tight drop-shadow bg-gradient-to-r from-blue-700 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+          TechSpark
+          </h1>
+        </div>
+        <p className="text-center text-xl md:text-2xl text-gray-600 max-w-3xl">
+          Discover real problems from Reddit communities and transform them into{" "}
+          <span className="font-bold text-blue-600">validated startup opportunities</span>
+          {" "}using AI-powered analysis.
+        </p>
+      </div>
       <div className="w-full flex justify-center mb-6">
-        <select
-          className="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 font-medium shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
-          value={selectedSubreddit}
-          onChange={e => setSelectedSubreddit(e.target.value)}
-          aria-label="Select subreddit"
-        >
-          {TECHNICAL_SUBREDDITS.map(sub => (
-            <option key={sub.value} value={sub.value}>
-              r/{sub.value}
-            </option>
-          ))}
-        </select>
+        <div className="w-full flex justify-center mb-6">
+          <select
+            className="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 font-medium shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={selectedSubreddit}
+            onChange={e => setSelectedSubreddit(e.target.value)}
+            aria-label="Select subreddit"
+          >
+            {TECHNICAL_SUBREDDITS.map(sub => (
+              <option key={sub.value} value={sub.value}>
+                r/{sub.value}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="w-full flex justify-center mb-8">
         <div className="flex gap-4">

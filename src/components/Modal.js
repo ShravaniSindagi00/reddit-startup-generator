@@ -1,49 +1,29 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { createPortal } from "react-dom";
-import { useEffect, useRef } from "react";
+import React from "react";
 
-export default function Modal({ open, onClose, children }) {
-  const modalRoot = typeof window !== "undefined" ? document.body : null;
-  const ref = useRef();
-
-  // Close on ESC
-  useEffect(() => {
-    if (!open) return;
-    const handleEsc = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [open, onClose]);
-
-  // Focus trap
-  useEffect(() => {
-    if (open && ref.current) ref.current.focus();
-  }, [open]);
-
-  if (!open || !modalRoot) return null;
-
-  return createPortal(
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        tabIndex={-1}
+export default function FloatingCard({ open, onClose, children }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-black/40 transition-opacity"
+        onClick={onClose}
+        aria-label="Close"
+      />
+      {/* Material Card */}
+      <div
+        className="relative z-10 bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 max-w-lg w-full mx-4 animate-fade-in"
+        onClick={e => e.stopPropagation()}
       >
-        <motion.div
-          ref={ref}
-          className="bg-gray-900 rounded-lg shadow-lg p-6 max-w-md w-full relative border border-gray-700 max-h-[70vh] overflow-y-auto pt-10 outline-none"
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          tabIndex={0}
+        {children}
+        <button
+          className="absolute top-4 right-4 text-gray-400 hover:text-blue-500 text-2xl font-bold transition"
+          onClick={onClose}
+          aria-label="Close"
         >
-          {children}
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>,
-    modalRoot
+          ×
+        </button>
+      </div>
+    </div>
   );
 }

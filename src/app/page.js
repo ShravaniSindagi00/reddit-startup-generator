@@ -43,6 +43,51 @@ async function fetchSummary(post) {
   }
 }
 
+// Utility: Check if summary is low quality or repeats title
+function isLowQuality(post) {
+  const lowQualityIndicators = ["shitpost", "meme", "lol", "pls help", "random thoughts"];
+  const title = post.title?.toLowerCase() || "";
+  const selftext = post.selftext?.toLowerCase() || "";
+  const summaryText = post.summary?.description?.toLowerCase() || "";
+  // 1. Length check
+  if (post.title.length < 30 && post.selftext.length < 100) return true;
+  // 2. Empty or repeats title
+  if (!summaryText || summaryText.trim() === "" || summaryText === title) return true;
+  if (summaryText.replace(/[^a-zA-Z0-9]/g, "").includes(title.replace(/[^a-zA-Z0-9]/g, ""))) return true;
+  // 3. Low-quality indicators
+  for (const word of lowQualityIndicators) {
+    if (title.includes(word) || selftext.includes(word) || summaryText.includes(word)) return true;
+  }
+  // 4. Markdown-heavy: more than 3 asterisks, links, emojis, or bullet points
+  const markdownHeavy = (str) => {
+    const asterisks = (str.match(/\*/g) || []).length;
+    const links = (str.match(/\[(.*?)\]\((.*?)\)/g) || []).length;
+    const emojis = (str.match(/[\u{1F600}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu) || []).length;
+    const bullets = (str.match(/[-*•]/g) || []).length;
+    return asterisks > 3 || links > 1 || emojis > 1 || bullets > 3;
+  };
+  if (markdownHeavy(post.title) || markdownHeavy(post.selftext)) return true;
+  return false;
+}
+
+// Utility: Sanitize text (strip markdown, links, emojis, special chars)
+function sanitizeText(text) {
+  if (!text) return "";
+  // Remove markdown links [text](url)
+  let clean = text.replace(/\[(.*?)\]\((.*?)\)/g, "$1");
+  // Remove * _ ~ ` > # (markdown)
+  clean = clean.replace(/[\*\_\~\`\>#]/g, "");
+  // Remove emojis (basic unicode ranges)
+  clean = clean.replace(/[\u{1F600}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
+  // Remove URLs
+  clean = clean.replace(/https?:\/\/\S+/g, "");
+  // Remove extra whitespace
+  clean = clean.replace(/\s+/g, " ").trim();
+  // Remove leading/trailing special chars
+  clean = clean.replace(/^[^\w]+|[^\w]+$/g, "");
+  return clean;
+}
+
 export default function Home() {
   // 2. Add subreddit state
   const [selectedSubreddit, setSelectedSubreddit] = useState(TECHNICAL_SUBREDDITS[0].value);
@@ -80,8 +125,19 @@ export default function Home() {
       const data = await res.json();
       // Fetch summaries for all posts
       const postsWithSummaries = await Promise.all(data.posts.map(fetchSummary));
-      // Filter by confidence
-      const filtered = postsWithSummaries.filter(p => p.summary && p.summary.confidence > CONFIDENCE_THRESHOLD);
+      // Filter by confidence and quality
+      const filtered = postsWithSummaries.filter(p =>
+        p.summary &&
+        p.summary.confidence > CONFIDENCE_THRESHOLD &&
+        !isLowQuality(p)
+      ).map(p => ({
+        ...p,
+        title: sanitizeText(p.title),
+        summary: {
+          ...p.summary,
+          description: sanitizeText(p.summary?.description)
+        }
+      }));
       setPosts(filtered);
       setAfter(null);
       setNoResults(filtered.length === 0);
@@ -111,8 +167,19 @@ export default function Home() {
       const data = await res.json();
       // Fetch summaries for all posts
       const postsWithSummaries = await Promise.all(data.posts.map(fetchSummary));
-      // Filter by confidence
-      const filtered = postsWithSummaries.filter(p => p.summary && p.summary.confidence > CONFIDENCE_THRESHOLD);
+      // Filter by confidence and quality
+      const filtered = postsWithSummaries.filter(p =>
+        p.summary &&
+        p.summary.confidence > CONFIDENCE_THRESHOLD &&
+        !isLowQuality(p)
+      ).map(p => ({
+        ...p,
+        title: sanitizeText(p.title),
+        summary: {
+          ...p.summary,
+          description: sanitizeText(p.summary?.description)
+        }
+      }));
       if (reset) {
         setPosts(filtered);
       } else {

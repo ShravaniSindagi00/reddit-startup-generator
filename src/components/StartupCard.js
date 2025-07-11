@@ -16,11 +16,34 @@ function SkeletonLoader() {
   );
 }
 
+// Utility: Clean summary for display
+function cleanSummary(text) {
+  if (!text) return "";
+  // Remove markdown links [text](url)
+  let clean = text.replace(/\[(.*?)\]\((.*?)\)/g, "$1");
+  // Remove * _ ~ ` > # (markdown)
+  clean = clean.replace(/[\*\_\~\`\>#]/g, "");
+  // Remove emojis (basic unicode ranges)
+  clean = clean.replace(/[\u{1F600}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
+  // Remove URLs
+  clean = clean.replace(/https?:\/\/\S+/g, "");
+  // Remove repeated punctuation (e.g., !!!!, ???)
+  clean = clean.replace(/([!?.,])\1{1,}/g, "$1");
+  // Remove extra whitespace
+  clean = clean.replace(/\s+/g, " ").trim();
+  // Remove leading/trailing special chars
+  clean = clean.replace(/^[^\w]+|[^\w]+$/g, "");
+  // Remove generic openers
+  clean = clean.replace(/^(this post is about|in this post|here's|here is|the post discusses|the post is about|in summary|summary:)\s*/i, "");
+  return clean;
+}
+
 export default function StartupCard({ post }) {
   const [showModal, setShowModal] = useState(false);
   const [solution, setSolution] = useState(null);
   const [solutionLoading, setSolutionLoading] = useState(false);
   const [solutionError, setSolutionError] = useState("");
+  const [showSummary, setShowSummary] = useState(false);
 
   const redditUrl = post.permalink ? `https://www.reddit.com${post.permalink}` : null;
 
@@ -52,6 +75,9 @@ export default function StartupCard({ post }) {
     }
   };
 
+  // Handler for summary reveal
+  const handleShowSummary = () => setShowSummary(true);
+
   return (
     <div className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 max-w-md w-full border border-gray-200 transition-all duration-200 transform hover:shadow-xl hover:scale-[1.025] hover:border-blue-400">
       {/* Top Info */}
@@ -73,22 +99,35 @@ export default function StartupCard({ post }) {
       {/* Author */}
       <div className="text-sm text-gray-500 mb-2">{post.author ? `u/${post.author}` : ""}</div>
 
-      {/* Generate Button */}
+      {/* Generate Startup Idea Button */}
       <button
         className="w-full flex items-center justify-center gap-2 py-2 rounded bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white font-semibold shadow"
-        onClick={handleOpenModal}
-        disabled={solutionLoading}
+        onClick={handleShowSummary}
+        disabled={showSummary}
       >
-        {solutionLoading ? (
-          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-          </svg>
-        ) : (
-          <Lightbulb className="w-5 h-5" />
-        )}
-        {solutionLoading ? "Generating..." : "Generate Startup Idea"}
+        <Lightbulb className="w-5 h-5" />
+        Generate Startup Idea
       </button>
+
+      {/* Summary and View on Reddit button, only after click */}
+      {showSummary && post.summary?.description && (
+        <div className="mb-1">
+          <span className="block text-sm text-gray-500 font-medium mb-0.5">Summary:</span>
+          <p className="text-gray-700 text-base leading-snug line-clamp-2">{cleanSummary(post.summary.description)}</p>
+          {redditUrl && (
+            <div className="flex justify-center mt-3">
+              <a
+                className="w-full flex items-center justify-center gap-2 py-2 rounded bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white font-semibold shadow text-center"
+                href={redditUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on Reddit
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal */}
       <FloatingCard open={showModal} onClose={() => setShowModal(false)}>

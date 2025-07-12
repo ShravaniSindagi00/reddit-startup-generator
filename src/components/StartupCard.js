@@ -17,16 +17,33 @@ function SkeletonLoader() {
   );
 }
 
+// Utility: Clean solution text for display
 function cleanSolution(text) {
   if (!text) return "";
-  let clean = text.replace(/\*\*/g, "")
-    .replace(/\[(.*?)\]\((.*?)\)/g, "$1")
-    .replace(/[\*\_\~\`\>#]/g, "")
-    .replace(/[\u{1F600}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "")
-    .replace(/https?:\/\/\S+/g, "")
-    .replace(/([!?.,])\1{1,}/g, "$1")
-    .replace(/\s+/g, " ")
-    .trim();
+  // Remove markdown stars
+  let clean = text.replace(/\*\*/g, "");
+  // Remove markdown links [text](url)
+  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, "$1");
+  // Remove other markdown symbols
+  clean = clean.replace(/[\*\_\~\`\>#]/g, "");
+  // Remove emojis (basic unicode ranges)
+  clean = clean.replace(/[\u{1F600}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
+  // Remove URLs
+  clean = clean.replace(/https?:\/\/\S+/g, "");
+  // Remove repeated punctuation
+  clean = clean.replace(/([!?.,])\1{1,}/g, "$1");
+  // Add space after numbered points (e.g., "1." becomes "1. ")
+  clean = clean.replace(/(\d+\.)([^\s])/g, "$1 $2");
+  // Add space after bullet points (e.g., "-" becomes "- ")
+  clean = clean.replace(/(^|\n)-([^\s])/g, "$1- $2");
+  // Add a newline before each numbered section except the first
+  clean = clean.replace(/(\d\.)/g, '\n$1');
+  clean = clean.replace(/^\s*\n/, ''); // Remove leading newline if present
+  // Remove extra whitespace
+  clean = clean.replace(/[ \t]+\n/g, '\n'); // Remove trailing spaces before newlines
+  clean = clean.replace(/\s+\n/g, '\n');   // Remove extra spaces before newlines
+  clean = clean.replace(/\n{2,}/g, '\n\n'); // Collapse multiple newlines
+  clean = clean.trim();
   return clean;
 }
 

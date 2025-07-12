@@ -2,6 +2,7 @@ import axios from "axios";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
 export async function getGeminiSummary({ title, selftext }) {
   const prompt = `
 Given the following Reddit post, extract:
@@ -39,26 +40,29 @@ Description: ...
 }
 
 export async function getGeminiSolution({ title, selftext }) {
-  const prompt = `
-Given the following Reddit post about a startup idea, generate a step-by-step solution outline for how someone could build and launch this startup. Be practical, concise, and actionable.
+  const prompt = `You are an expert startup consultant.
 
-Format:
-Solution Outline:
-1.
-2.
-3.
-...
+Given the Reddit post below (title and body), generate a startup solution with clear sections in bullet points or numbered steps. Format the response in a clean outline suitable for web display.
 
-Reddit Post Title: ${title}
-Reddit Post Text: ${selftext}
-`;
+Follow this format exactly:
+1. 📝 Problem Summary – 1-2 lines explaining the user's problem.
+2. 🚀 Proposed Startup Solution – 2-3 lines describing the idea in simple language.
+3. 📦 MVP Plan – Bullet points showing what a minimum viable version would look like.
+4. 🔧 Suggested Tools/Tech – Mention free tools or platforms.
+5. 🧪 Validation Tips – How to test this idea quickly.
 
-  const content = prompt;
+Avoid emojis in your answer (except for those used in section headers).
+Avoid markdown formatting (no **, [](), or backticks).
+Avoid large paragraphs. Keep it structured and readable.
+
+Now here is the Reddit post:
+Title: ${title}
+Body: ${selftext}`;
 
   const body = {
     contents: [
       {
-        parts: [{ text: content }]
+        parts: [{ text: prompt }]
       }
     ]
   };
